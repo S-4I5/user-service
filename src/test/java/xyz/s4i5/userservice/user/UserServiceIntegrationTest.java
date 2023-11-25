@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.testcontainers.containers.MongoDBContainer;
@@ -37,7 +36,7 @@ public class UserServiceIntegrationTest {
 
     @Test
     @Order(1)
-    public void shouldSaveUser(){
+    public void shouldSaveUser() {
         Optional<UserDTO> user = userService.createUser(email, login, password);
 
         assertThat(user.isPresent()).isTrue();
@@ -45,18 +44,18 @@ public class UserServiceIntegrationTest {
 
     @Test
     @Order(2)
-    public void shouldNotSaveUserWithSameLoginAndEmail(){
-        Optional<UserDTO> user = userService.createUser(1+email, login, password);
+    public void shouldNotSaveUserWithSameLoginAndEmail() {
+        Optional<UserDTO> user = userService.createUser(1 + email, login, password);
         assertThat(user.isPresent()).isFalse();
 
-        user = userService.createUser(email, login+1, password);
+        user = userService.createUser(email, login + 1, password);
         assertThat(user.isPresent()).isFalse();
     }
 
     @Test
     @Order(3)
-    public void shouldDeleteUser(){
-        Optional<UserDTO> user = userService.createUser(1+email, login+1, password);
+    public void shouldDeleteUser() {
+        Optional<UserDTO> user = userService.createUser(1 + email, login + 1, password);
         assertThat(user.isPresent()).isTrue();
 
         assertThat(userService.deleteUser(user.get().getId())).isTrue();
@@ -64,8 +63,8 @@ public class UserServiceIntegrationTest {
 
     @Test
     @Order(4)
-    public void shouldUpdateUser(){
-        Optional<UserDTO> user = userService.createUser(2+email, login+2, password);
+    public void shouldUpdateUser() {
+        Optional<UserDTO> user = userService.createUser(2 + email, login + 2, password);
         assertThat(user.isPresent()).isTrue();
 
         List<Role> newRolesList = List.of(Role.APP1_USER, Role.APP2_USER);
@@ -78,8 +77,8 @@ public class UserServiceIntegrationTest {
 
     @Test
     @Order(5)
-    public void shouldFindUserById(){
-        Optional<UserDTO> user = userService.createUser(3+email, login+3, password);
+    public void shouldFindUserById() {
+        Optional<UserDTO> user = userService.createUser(3 + email, login + 3, password);
         assertThat(user.isPresent()).isTrue();
 
         assertThat(userService.getUser(user.get().getId())).isPresent();
