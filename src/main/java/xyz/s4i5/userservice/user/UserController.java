@@ -5,7 +5,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import xyz.s4i5.userservice.user.dto.UserDTO;
-import xyz.s4i5.userservice.user.request.CreateUserRequest;
+import xyz.s4i5.userservice.user.requests.CreateUserRequest;
+import xyz.s4i5.userservice.user.responses.ChangedFieldResponse;
+import xyz.s4i5.userservice.user.responses.UserDTOResponse;
 
 @Controller()
 @RequiredArgsConstructor
@@ -15,13 +17,13 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("")
-    public ResponseEntity<UserDTO> createUser(
+    public ResponseEntity<UserDTOResponse> createUser(
             @RequestBody CreateUserRequest request
     ) {
         var result = userService.createUser(request.email(), request.password());
 
         return (result.map(
-                dto -> ResponseEntity.status(201).body(dto)).orElseGet(
+                dto -> ResponseEntity.status(201).body(new UserDTOResponse(dto))).orElseGet(
                         () -> ResponseEntity.badRequest().build())
         );
     }
@@ -37,25 +39,26 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserDTO> getUser(
+    public ResponseEntity<UserDTOResponse> getUser(
             @PathVariable String id
     ) {
         var result = userService.getUser(id);
 
-        return (result.map(ResponseEntity::ok).orElseGet(
+        return (result.map(
+                dto -> ResponseEntity.ok(new UserDTOResponse(dto))).orElseGet(
                 () -> ResponseEntity.noContent().build())
         );
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<UserDTO> updateUser(
+    public ResponseEntity<ChangedFieldResponse> updateUser(
             @PathVariable String id,
             @RequestBody UserDTO userDTO
     ) {
         var result = userService.updateUser(userDTO, id);
 
         return (result.map(
-                dto -> ResponseEntity.status(201).body(dto)).orElseGet(
+                dto -> ResponseEntity.status(201).body(new ChangedFieldResponse(dto))).orElseGet(
                 () -> ResponseEntity.badRequest().build())
         );
     }
