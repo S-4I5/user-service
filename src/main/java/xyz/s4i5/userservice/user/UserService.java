@@ -15,17 +15,19 @@ public class UserService {
     private final UserDTOMapper userDTOMapper;
     private final PasswordEncoder passwordEncoder;
 
-    public Optional<UserDTO> createUser(String email, String password){
+    public Optional<UserDTO> createUser(String email, String login,String password){
 
         try {
             return Optional.of(
                     userDTOMapper.apply(userRepository.save(
                         User.builder()
                                 .email(email)
+                                .login(login)
                                 .password(passwordEncoder.encode(password))
                                 .build()
             )));
         } catch (Exception e) {
+            e.printStackTrace();
             return Optional.empty();
         }
     }

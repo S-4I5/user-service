@@ -1,6 +1,7 @@
 version: '3'
 
 services:
+
   mongodb:
     image: mongo
     container_name: mongo_db
@@ -12,6 +13,7 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_DATABASE=users
       - MONGO_INITDB_ROOT_PASSWORD=admin
+
   mongo-express:
     image: mongo-express
     restart: always
@@ -24,5 +26,6 @@ services:
       - ME_CONFIG_MONGODB_SERVER=mongo_db
       - ME_CONFIG_BASICAUTH_USERNAME=test
       - ME_CONFIG_BASICAUTH_PASSWORD=test
+
 volumes:
   mongo: {}
