@@ -1,10 +1,13 @@
 package xyz.s4i5.userservice.user;
 
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 import xyz.s4i5.userservice.encoder.PasswordEncoder;
 import xyz.s4i5.userservice.user.dto.UserDTO;
 import xyz.s4i5.userservice.user.dto.UserDTOMapper;
+import xyz.s4i5.userservice.user.exceptions.CannotCreateUserException;
+import xyz.s4i5.userservice.user.exceptions.UserNotFoundException;
 
 import java.util.Optional;
 
@@ -27,19 +30,25 @@ public class UserService {
                                 .build()
             )));
         } catch (Exception e) {
-            e.printStackTrace();
-            return Optional.empty();
+            throw new CannotCreateUserException();
         }
     }
 
     public Optional<UserDTO> getUser(String id){
-        return userRepository.findById(id).map(userDTOMapper);
+        Optional<UserDTO> userDTO = userRepository.findById(id).map(userDTOMapper);
+
+        if(userDTO.isEmpty()){
+            throw new UserNotFoundException();
+        }
+
+        return userDTO;
     }
 
+    @SneakyThrows
     public boolean deleteUser(String id){
 
         if(userRepository.findById(id).isEmpty()){
-            return false;
+            throw new UserNotFoundException();
         }
 
         userRepository.deleteById(id);
@@ -47,11 +56,12 @@ public class UserService {
         return true;
     }
 
+    @SneakyThrows
     public Optional<UserDTO> updateUser(UserDTO userDTO, String id){
         Optional<User> user = userRepository.findById(id);
 
         if (user.isEmpty()) {
-            return Optional.empty();
+            throw new UserNotFoundException();
         }
 
         Optional.ofNullable(userDTO.getEmail()).ifPresent(user.get()::setEmail);
