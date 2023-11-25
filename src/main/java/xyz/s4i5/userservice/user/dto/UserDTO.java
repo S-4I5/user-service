@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import xyz.s4i5.userservice.user.Roles;
+import xyz.s4i5.userservice.user.Role;
 
 import java.util.List;
 
@@ -17,5 +17,5 @@ public class UserDTO {
     private String login;
     private String email;
     private String fullName;
-    private List<Roles> roles;
+    private List<Role> roles;
 }

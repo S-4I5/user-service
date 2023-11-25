@@ -1,6 +1,7 @@
 package xyz.s4i5.userservice.user;
 
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +21,7 @@ public class UserController {
     public ResponseEntity<UserDTOResponse> createUser(
             @RequestBody CreateUserRequest request
     ) {
-        var result = userService.createUser(request.email(), request.password());
+        var result = userService.createUser(request.email(), request.login(), request.password());
 
         return (result.map(
                 dto -> ResponseEntity.status(201).body(new UserDTOResponse(dto))).orElseGet(
@@ -58,7 +59,7 @@ public class UserController {
         var result = userService.updateUser(userDTO, id);
 
         return (result.map(
-                dto -> ResponseEntity.status(201).body(new ChangedFieldResponse(dto))).orElseGet(
+                dto -> ResponseEntity.accepted().body(new ChangedFieldResponse(dto))).orElseGet(
                 () -> ResponseEntity.badRequest().build())
         );
     }

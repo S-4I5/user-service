@@ -1,12 +1,14 @@
 spring:
   data:
     mongodb:
+      auto-index-creation: true
       username: admin
       password: admin
       host: localhost
       port: 27017
       database: users
       authentication-database: admin
+
 
 server:
   port: 8080

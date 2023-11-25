@@ -1,6 +1,6 @@
 package xyz.s4i5.userservice.user;
 
-public enum Roles {
+public enum Role {
     APP1_ADMIN,
     APP1_USER,
     APP2_ADMIN,
