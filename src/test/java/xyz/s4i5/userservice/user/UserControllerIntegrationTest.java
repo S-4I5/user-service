@@ -38,6 +38,7 @@ public class UserControllerIntegrationTest {
     private final String login = "tests_lover";
     private final String email = "example@gmail.com";
     private final String password = "password";
+    private final String httpPath = "http://localhost:8080/api/v1";
 
     @Autowired
     private MockMvc mockMvc;
@@ -50,7 +51,7 @@ public class UserControllerIntegrationTest {
         CreateUserRequest request = new CreateUserRequest(email, login, password);
         String requestJson = objectMapper.writeValueAsString(request);
 
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post(httpPath + "/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
         ).andExpect(status().isCreated());
@@ -62,14 +63,14 @@ public class UserControllerIntegrationTest {
         CreateUserRequest request = new CreateUserRequest(1+email, login+1, password);
         String requestJson = objectMapper.writeValueAsString(request);
 
-        var response = mockMvc.perform(post("/users")
+        var response = mockMvc.perform(post(httpPath + "/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
         ).andExpect(status().isCreated()).andReturn();
 
         String userId = JsonPath.read(response.getResponse().getContentAsString(), "$.user.id");
 
-        mockMvc.perform(get("/users/" + userId)
+        mockMvc.perform(get(httpPath + "/users/" + userId)
         ).andExpect(status().isOk());
     }
 
@@ -79,14 +80,14 @@ public class UserControllerIntegrationTest {
         CreateUserRequest request = new CreateUserRequest(2+email, login+2, password);
         String requestJson = objectMapper.writeValueAsString(request);
 
-        var response = mockMvc.perform(post("/users")
+        var response = mockMvc.perform(post(httpPath + "/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
         ).andExpect(status().isCreated()).andReturn();
 
         String userId = JsonPath.read(response.getResponse().getContentAsString(), "$.user.id");
 
-        mockMvc.perform(delete("/users/" + userId)
+        mockMvc.perform(delete(httpPath + "/users/" + userId)
         ).andExpect(status().isNoContent());
     }
 
@@ -96,7 +97,7 @@ public class UserControllerIntegrationTest {
         CreateUserRequest request = new CreateUserRequest(3+email, login, password);
         String requestJson = objectMapper.writeValueAsString(request);
 
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post(httpPath + "/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
         ).andExpect(status().isBadRequest()).andReturn();
@@ -104,7 +105,7 @@ public class UserControllerIntegrationTest {
         request = new CreateUserRequest(email, login+3, password);
         requestJson = objectMapper.writeValueAsString(request);
 
-         mockMvc.perform(post("/users")
+         mockMvc.perform(post(httpPath + "/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
         ).andExpect(status().isBadRequest()).andReturn();
@@ -116,7 +117,7 @@ public class UserControllerIntegrationTest {
         CreateUserRequest request = new CreateUserRequest(4+email, login+4, password);
         String requestJson = objectMapper.writeValueAsString(request);
 
-        var response = mockMvc.perform(post("/users")
+        var response = mockMvc.perform(post(httpPath + "/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
         ).andExpect(status().isCreated()).andReturn();
@@ -134,7 +135,7 @@ public class UserControllerIntegrationTest {
         expectedRoles.appendElement("APP1_USER");
         expectedRoles.appendElement("APP2_USER");
 
-         mockMvc.perform(patch("/users/" + userId)
+        mockMvc.perform(patch(httpPath + "/users/" + userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
         ).andExpect(status().isAccepted()).andExpect(
@@ -142,5 +143,13 @@ public class UserControllerIntegrationTest {
                 )).andReturn();
     }
 
+    @Test
+    @Order(5)
+    public void shouldReturnListOfUsers() throws Exception {
+        mockMvc.perform(get(httpPath + "/users")
+                .param("offset", "0")
+                .param("limit", "1")
+        ).andExpect(status().isOk());
+    }
 
 }

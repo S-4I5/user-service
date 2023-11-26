@@ -3,25 +3,23 @@ package xyz.s4i5.userservice.user;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import xyz.s4i5.userservice.user.dto.UserDTO;
 import xyz.s4i5.userservice.user.requests.CreateUserRequest;
 import xyz.s4i5.userservice.user.responses.ChangedFieldResponse;
+import xyz.s4i5.userservice.user.responses.UserDTOListResponse;
 import xyz.s4i5.userservice.user.responses.UserDTOResponse;
 
-@Controller()
+@RestController
 @RequiredArgsConstructor
-@RequestMapping("/users")
+@RequestMapping("api/v1/users")
 public class UserController {
 
     private final UserService userService;
 
-    @PostMapping("")
+    @PostMapping()
     public ResponseEntity<UserDTOResponse> createUser(
             @Valid @RequestBody CreateUserRequest request
     ) {
@@ -52,6 +50,19 @@ public class UserController {
         return (result.map(
                 dto -> ResponseEntity.ok(new UserDTOResponse(dto))).orElseGet(
                 () -> ResponseEntity.noContent().build())
+        );
+    }
+
+    @GetMapping()
+    public ResponseEntity<UserDTOListResponse> getUser(
+            @RequestParam(value = "limit", required = false, defaultValue = "10") int limit,
+            @RequestParam(value = "offset", required = false, defaultValue = "0") int offset
+    ) {
+        var result = userService.getUsers(offset, limit);
+
+        return (result.isEmpty() ?
+                ResponseEntity.notFound().build() :
+                ResponseEntity.ok(new UserDTOListResponse(result.stream().map(UserDTOResponse::new).toList()))
         );
     }
 

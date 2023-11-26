@@ -2,6 +2,8 @@ package xyz.s4i5.userservice.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import xyz.s4i5.userservice.encoder.PasswordEncoder;
 import xyz.s4i5.userservice.user.dto.UserDTO;
@@ -9,6 +11,7 @@ import xyz.s4i5.userservice.user.dto.UserDTOMapper;
 import xyz.s4i5.userservice.user.exceptions.CannotCreateUserException;
 import xyz.s4i5.userservice.user.exceptions.UserNotFoundException;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -32,6 +35,16 @@ public class UserService {
         } catch (Exception e) {
             throw new CannotCreateUserException();
         }
+    }
+
+    public List<UserDTO> getUsers(int offset, int limit){
+        Page<User> userPage = userRepository.findAll(PageRequest.of(offset, limit));
+
+        if(userPage.getContent().isEmpty()){
+            throw new UserNotFoundException();
+        }
+
+        return userPage.getContent().stream().map(userDTOMapper).toList();
     }
 
     public Optional<UserDTO> getUser(String id){
@@ -66,7 +79,7 @@ public class UserService {
 
         Optional.ofNullable(userDTO.getEmail()).ifPresent(user.get()::setEmail);
         Optional.ofNullable(userDTO.getLogin()).ifPresent(user.get()::setLogin);
-        Optional.ofNullable(userDTO.getEmail()).ifPresent(user.get()::setEmail);
+        Optional.ofNullable(userDTO.getFullName()).ifPresent(user.get()::setFullName);
         Optional.ofNullable(userDTO.getRoles()).ifPresent(user.get()::setRoles);
 
         userRepository.save(user.get());

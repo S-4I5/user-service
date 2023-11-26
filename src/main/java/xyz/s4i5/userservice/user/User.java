@@ -1,5 +1,6 @@
 package xyz.s4i5.userservice.user;
 
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

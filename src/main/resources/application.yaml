@@ -9,6 +9,5 @@ spring:
       database: users
       authentication-database: admin
 
-
 server:
   port: 8080

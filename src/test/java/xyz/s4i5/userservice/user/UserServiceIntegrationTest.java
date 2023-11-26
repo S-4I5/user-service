@@ -1,9 +1,6 @@
 package xyz.s4i5.userservice.user;
 
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -11,11 +8,13 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import xyz.s4i5.userservice.user.dto.UserDTO;
+import xyz.s4i5.userservice.user.exceptions.CannotCreateUserException;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertThrows;
 
 
 @Testcontainers
@@ -45,11 +44,11 @@ public class UserServiceIntegrationTest {
     @Test
     @Order(2)
     public void shouldNotSaveUserWithSameLoginAndEmail() {
-        Optional<UserDTO> user = userService.createUser(1 + email, login, password);
-        assertThat(user.isPresent()).isFalse();
+        assertThrows(CannotCreateUserException.class,
+                () -> userService.createUser(1 + email, login, password));
 
-        user = userService.createUser(email, login + 1, password);
-        assertThat(user.isPresent()).isFalse();
+        assertThrows(CannotCreateUserException.class,
+                () -> userService.createUser(email, login + 1, password));
     }
 
     @Test
@@ -82,5 +81,16 @@ public class UserServiceIntegrationTest {
         assertThat(user.isPresent()).isTrue();
 
         assertThat(userService.getUser(user.get().getId())).isPresent();
+    }
+
+    @Test
+    @Order(6)
+    public void shouldReturnListOfUsers() {
+        Optional<UserDTO> user = userService.createUser(4 + email, login + 4, password);
+        assertThat(user.isPresent()).isTrue();
+
+        List<UserDTO> userDTOList = userService.getUsers(0, 10);
+
+        assertThat(userDTOList.size()).isEqualTo(4);
     }
 }
