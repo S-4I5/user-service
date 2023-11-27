@@ -1,10 +1,8 @@
 package xyz.s4i5.userservice.user;
 
-import com.mongodb.BasicDBList;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -13,14 +11,12 @@ import xyz.s4i5.userservice.user.dto.UserDTO;
 import xyz.s4i5.userservice.user.dto.UserDTOMapper;
 import xyz.s4i5.userservice.user.exceptions.CannotCreateUserException;
 import xyz.s4i5.userservice.user.exceptions.UserNotFoundException;
-import xyz.s4i5.userservice.user.repository.UserRepository;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
-import static org.springframework.data.domain.ExampleMatcher.GenericPropertyMatchers.*;
+import static java.util.stream.Collectors.toList;
 
 @Service
 @RequiredArgsConstructor
@@ -64,7 +60,11 @@ public class UserService {
             throw new UserNotFoundException();
         }
 
-        return userPage.getContent().stream().map(userDTOMapper).filter(x -> new HashSet<>(x.getRoles()).containsAll(roles)).toList();
+        return userPage.getContent().stream().map(userDTOMapper).filter(x -> {
+            if(x.getRoles() == null)
+                return false;
+            return new HashSet<>(x.getRoles()).containsAll(roles);
+        }).toList();
     }
 
     public Optional<UserDTO> getUser(String id){

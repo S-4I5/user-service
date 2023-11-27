@@ -60,7 +60,7 @@ public class UserControllerIntegrationTest {
     @Test
     @Order(2)
     public void shouldFindNewUserByID() throws Exception {
-        CreateUserRequest request = new CreateUserRequest(1+email, login+1, password);
+        CreateUserRequest request = new CreateUserRequest(1 + email, login + 1, password);
         String requestJson = objectMapper.writeValueAsString(request);
 
         var response = mockMvc.perform(post(httpPath + "/users")
@@ -77,7 +77,7 @@ public class UserControllerIntegrationTest {
     @Test
     @Order(3)
     public void shouldDeleteUserById() throws Exception {
-        CreateUserRequest request = new CreateUserRequest(2+email, login+2, password);
+        CreateUserRequest request = new CreateUserRequest(2 + email, login + 2, password);
         String requestJson = objectMapper.writeValueAsString(request);
 
         var response = mockMvc.perform(post(httpPath + "/users")
@@ -94,7 +94,7 @@ public class UserControllerIntegrationTest {
     @Test
     @Order(4)
     public void shouldNotCreateUserWithExistingEmailOrLogin() throws Exception {
-        CreateUserRequest request = new CreateUserRequest(3+email, login, password);
+        CreateUserRequest request = new CreateUserRequest(3 + email, login, password);
         String requestJson = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post(httpPath + "/users")
@@ -102,10 +102,10 @@ public class UserControllerIntegrationTest {
                 .content(requestJson)
         ).andExpect(status().isBadRequest()).andReturn();
 
-        request = new CreateUserRequest(email, login+3, password);
+        request = new CreateUserRequest(email, login + 3, password);
         requestJson = objectMapper.writeValueAsString(request);
 
-         mockMvc.perform(post(httpPath + "/users")
+        mockMvc.perform(post(httpPath + "/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
         ).andExpect(status().isBadRequest()).andReturn();
@@ -114,7 +114,7 @@ public class UserControllerIntegrationTest {
     @Test
     @Order(5)
     public void shouldUpdateUser() throws Exception {
-        CreateUserRequest request = new CreateUserRequest(4+email, login+4, password);
+        CreateUserRequest request = new CreateUserRequest(4 + email, login + 4, password);
         String requestJson = objectMapper.writeValueAsString(request);
 
         var response = mockMvc.perform(post(httpPath + "/users")
@@ -127,7 +127,7 @@ public class UserControllerIntegrationTest {
         List<Role> newRolesList = List.of(Role.APP1_USER, Role.APP2_USER);
 
         UserDTO userDTO = UserDTO.builder()
-                        .roles(newRolesList)
+                .roles(newRolesList)
                 .build();
         requestJson = objectMapper.writeValueAsString(userDTO);
 
@@ -144,11 +144,25 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    @Order(5)
+    @Order(6)
     public void shouldReturnListOfUsers() throws Exception {
         mockMvc.perform(get(httpPath + "/users")
-                .param("offset", "0")
-                .param("limit", "1")
+        ).andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(7)
+    public void shouldReturnUsersWithRole() throws Exception {
+        mockMvc.perform(get(httpPath + "/users")
+                .requestAttr("roles", String.valueOf(List.of(Role.APP1_USER)))
+        ).andExpect(status().isOk());
+
+        mockMvc.perform(get(httpPath + "/users")
+                .requestAttr("roles", String.valueOf(List.of(Role.APP2_USER)))
+        ).andExpect(status().isOk());
+
+        mockMvc.perform(get(httpPath + "/users")
+                .requestAttr("roles", String.valueOf(List.of(Role.APP1_USER, Role.APP2_USER)))
         ).andExpect(status().isOk());
     }
 

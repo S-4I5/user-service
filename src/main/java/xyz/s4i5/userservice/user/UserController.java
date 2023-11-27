@@ -9,7 +9,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import xyz.s4i5.userservice.user.dto.UserDTO;
 import xyz.s4i5.userservice.user.exceptions.CannotCreateUserException;
@@ -96,29 +95,6 @@ public class UserController {
                 () -> ResponseEntity.notFound().build())
         );
     }
-
-//    @Operation(
-//            summary = "Get users",
-//            description = "Will return list of users"
-//    )
-//    @ApiResponse(responseCode = "200", description = "Users returned")
-//    @ApiResponse(responseCode = "404", description = "Users not found",
-//            content = @Content(
-//            mediaType = "application/json",
-//            schema = @Schema(implementation = UserNotFoundException.class)
-//    ))
-//    @GetMapping()
-//    public ResponseEntity<UserDTOListResponse> getUsers(
-//            @RequestParam(value = "limit", required = false, defaultValue = "10") int limit,
-//            @RequestParam(value = "offset", required = false, defaultValue = "0") int offset
-//    ) {
-//        var result = userService.getUsers(offset, limit);
-//
-//        return (result.isEmpty() ?
-//                ResponseEntity.notFound().build() :
-//                ResponseEntity.ok(new UserDTOListResponse(result.stream().map(UserDTOResponse::new).toList()))
-//        );
-//    }
 
     @Operation(
             summary = "Get users",
