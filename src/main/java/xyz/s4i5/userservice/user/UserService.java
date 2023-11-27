@@ -1,7 +1,10 @@
 package xyz.s4i5.userservice.user;
 
+import com.mongodb.BasicDBList;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -10,9 +13,14 @@ import xyz.s4i5.userservice.user.dto.UserDTO;
 import xyz.s4i5.userservice.user.dto.UserDTOMapper;
 import xyz.s4i5.userservice.user.exceptions.CannotCreateUserException;
 import xyz.s4i5.userservice.user.exceptions.UserNotFoundException;
+import xyz.s4i5.userservice.user.repository.UserRepository;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+
+import static org.springframework.data.domain.ExampleMatcher.GenericPropertyMatchers.*;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +29,7 @@ public class UserService {
     private final UserDTOMapper userDTOMapper;
     private final PasswordEncoder passwordEncoder;
 
-    public Optional<UserDTO> createUser(String email, String login,String password){
+    public Optional<UserDTO> createUser(String email, String login, String password){
 
         try {
             return Optional.of(
@@ -37,14 +45,26 @@ public class UserService {
         }
     }
 
-    public List<UserDTO> getUsers(int offset, int limit){
-        Page<User> userPage = userRepository.findAll(PageRequest.of(offset, limit));
+    public List<UserDTO> getUsers(String id, String login, String email, String fullName, List<Role> roles,
+                                  int offset, int limit){
+
+
+        User ex = User.builder()
+                .id(id)
+                .email(email)
+                .login(login)
+                .fullName(fullName)
+                .build();
+
+        Example<User> example = Example.of(ex);
+
+        Page<User> userPage = userRepository.findAll(example, PageRequest.of(offset, limit));
 
         if(userPage.getContent().isEmpty()){
             throw new UserNotFoundException();
         }
 
-        return userPage.getContent().stream().map(userDTOMapper).toList();
+        return userPage.getContent().stream().map(userDTOMapper).filter(x -> new HashSet<>(x.getRoles()).containsAll(roles)).toList();
     }
 
     public Optional<UserDTO> getUser(String id){
@@ -71,6 +91,8 @@ public class UserService {
 
     @SneakyThrows
     public Optional<UserDTO> updateUser(UserDTO userDTO, String id){
+        System.out.println(id);
+
         Optional<User> user = userRepository.findById(id);
 
         if (user.isEmpty()) {

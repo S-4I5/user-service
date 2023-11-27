@@ -7,17 +7,18 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.List;
 
 
 @Data
 @Builder
-@Document
+@Document("users")
 @AllArgsConstructor
 public class User {
     @Id
-    private String id;
+    public String id;
     @Indexed(unique = true)
     private String login;
     @Indexed(unique = true)

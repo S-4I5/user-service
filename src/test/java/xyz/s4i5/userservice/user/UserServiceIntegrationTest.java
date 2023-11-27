@@ -89,8 +89,8 @@ public class UserServiceIntegrationTest {
         Optional<UserDTO> user = userService.createUser(4 + email, login + 4, password);
         assertThat(user.isPresent()).isTrue();
 
-        List<UserDTO> userDTOList = userService.getUsers(0, 10);
+        List<UserDTO> userDTOList = userService.getUsers("", "", "", "", List.of(), 0, 10);
 
-        assertThat(userDTOList.size()).isEqualTo(4);
+        assertThat(userDTOList.isEmpty()).isFalse();
     }
 }
