@@ -32,7 +32,7 @@ public class UserController {
             description = "Create user with email, login and password"
     )
     @ApiResponse(responseCode = "201", description = "User created")
-    @ApiResponse(responseCode = "400", description = "Invalid username/login supplied",
+    @ApiResponse(responseCode = "400", description = "Invalid username/login supplied/request body",
             content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = CannotCreateUserException.class)
@@ -138,12 +138,13 @@ public class UserController {
                     mediaType = "application/json",
                     schema = @Schema(implementation = UserNotFoundException.class)
             ))
+    @ApiResponse(responseCode = "400", description = "Invalid request body")
     @PatchMapping("/{id}")
     public ResponseEntity<ChangedFieldResponse> updateUser(
             @Parameter(description = "User with this id should be updated", required = true)
             @NotNull @PathVariable String id,
             @Parameter(description = "List of fields for update", required = true)
-            @RequestBody UserDTO userDTO
+            @Valid @RequestBody UserDTO userDTO
     ) {
         var result = userService.updateUser(userDTO, id);
 
