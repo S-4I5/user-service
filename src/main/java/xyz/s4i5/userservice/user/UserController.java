@@ -144,7 +144,7 @@ public class UserController {
             @Parameter(description = "User with this id should be updated", required = true)
             @NotNull @PathVariable String id,
             @Parameter(description = "List of fields for update", required = true)
-            @Valid @RequestBody UserDTO userDTO
+            @RequestBody UserDTO userDTO
     ) {
         var result = userService.updateUser(userDTO, id);
 
