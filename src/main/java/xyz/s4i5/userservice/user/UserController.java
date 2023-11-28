@@ -31,12 +31,10 @@ public class UserController {
             summary = "Create user",
             description = "Create user with email, login and password"
     )
-    @ApiResponse(responseCode = "201", description = "User created")
-    @ApiResponse(responseCode = "400", description = "Invalid username/login supplied/request body",
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = CannotCreateUserException.class)
-            ))
+    @ApiResponse(responseCode = "201", description = "User created",
+            content = @Content( schema = @Schema(implementation = UserDTOResponse.class),
+                    mediaType = "application/json"))
+    @ApiResponse(responseCode = "400", description = "Invalid username/login/request body supplied", content = @Content(schema = @Schema(hidden = true)))
     @PostMapping()
     public ResponseEntity<UserDTOResponse> createUser(
             @Parameter(description = "User with this cred. should be created", required = true)
@@ -56,12 +54,8 @@ public class UserController {
             summary = "Delete user",
             description = "Will delete user with given id"
     )
-    @ApiResponse(responseCode = "204", description = "User deleted")
-    @ApiResponse(responseCode = "404", description = "Users not found",
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = UserNotFoundException.class)
-            ))
+    @ApiResponse(responseCode = "204", description = "User deleted", content = @Content(schema = @Schema(hidden = true)))
+    @ApiResponse(responseCode = "404", description = "Users not found", content = @Content(schema = @Schema(hidden = true)))
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(
             @Parameter(description = "User with this id should be deleted", required = true)
@@ -77,12 +71,10 @@ public class UserController {
             summary = "Get user",
             description = "Will return user with given id"
     )
-    @ApiResponse(responseCode = "200", description = "User returned")
-    @ApiResponse(responseCode = "404", description = "Users not found",
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = UserNotFoundException.class)
-            ))
+    @ApiResponse(responseCode = "200", description = "User returned",
+            content = @Content( schema = @Schema(implementation = UserDTOResponse.class),
+                    mediaType = "application/json"))
+    @ApiResponse(responseCode = "404", description = "Users not found", content = @Content(schema = @Schema(hidden = true)))
     @GetMapping("/{id}")
     public ResponseEntity<UserDTOResponse> getUser(
             @Parameter(description = "User with this id should be returned", required = true)
@@ -100,12 +92,10 @@ public class UserController {
             summary = "Get users",
             description = "Will return list of users"
     )
-    @ApiResponse(responseCode = "200", description = "Users returned")
-    @ApiResponse(responseCode = "404", description = "Users not found",
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = UserNotFoundException.class)
-            ))
+    @ApiResponse(responseCode = "200", description = "Users returned",
+            content = @Content( schema = @Schema(implementation = UserDTOListResponse.class),
+                    mediaType = "application/json"))
+    @ApiResponse(responseCode = "404", description = "Users not found", content = @Content(schema = @Schema(hidden = true)))
     @GetMapping("")
     public ResponseEntity<UserDTOListResponse> getUsersWithParams(
             @RequestParam(name = "id", required = false) String id,
@@ -132,13 +122,11 @@ public class UserController {
             summary = "Update users",
             description = "Will update user with given info"
     )
-    @ApiResponse(responseCode = "201", description = "Users updated")
-    @ApiResponse(responseCode = "404", description = "Users not found",
-            content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = UserNotFoundException.class)
-            ))
-    @ApiResponse(responseCode = "400", description = "Invalid request body")
+    @ApiResponse(responseCode = "201", description = "User updated",
+            content = @Content( schema = @Schema(implementation = ChangedFieldResponse.class),
+                    mediaType = "application/json"))
+    @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(hidden = true)))
+    @ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content(schema = @Schema(hidden = true)))
     @PatchMapping("/{id}")
     public ResponseEntity<ChangedFieldResponse> updateUser(
             @Parameter(description = "User with this id should be updated", required = true)

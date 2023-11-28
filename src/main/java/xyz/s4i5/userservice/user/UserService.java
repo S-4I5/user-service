@@ -91,7 +91,6 @@ public class UserService {
 
     @SneakyThrows
     public Optional<UserDTO> updateUser(UserDTO userDTO, String id){
-        System.out.println(id);
 
         Optional<User> user = userRepository.findById(id);
 
