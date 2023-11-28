@@ -40,8 +40,6 @@ public class UserController {
             @Parameter(description = "User with this cred. should be created", required = true)
             @Valid @RequestBody CreateUserRequest request
     ) {
-
-
         var result = userService.createUser(request.email(), request.login(), request.password());
 
         return (result.map(
@@ -90,7 +88,7 @@ public class UserController {
 
     @Operation(
             summary = "Get users",
-            description = "Will return list of users"
+            description = "Will return list of users filtered by given parameters"
     )
     @ApiResponse(responseCode = "200", description = "Users returned",
             content = @Content( schema = @Schema(implementation = UserDTOListResponse.class),
@@ -126,7 +124,7 @@ public class UserController {
             content = @Content( schema = @Schema(implementation = ChangedFieldResponse.class),
                     mediaType = "application/json"))
     @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(hidden = true)))
-    @ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content(schema = @Schema(hidden = true)))
+    @ApiResponse(responseCode = "400", description = "Invalid username/login/request body supplied", content = @Content(schema = @Schema(hidden = true)))
     @PatchMapping("/{id}")
     public ResponseEntity<ChangedFieldResponse> updateUser(
             @Parameter(description = "User with this id should be updated", required = true)

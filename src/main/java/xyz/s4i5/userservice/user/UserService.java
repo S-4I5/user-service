@@ -1,7 +1,9 @@
 package xyz.s4i5.userservice.user;
 
+import com.mongodb.MongoWriteException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -10,6 +12,7 @@ import xyz.s4i5.userservice.encoder.PasswordEncoder;
 import xyz.s4i5.userservice.user.dto.UserDTO;
 import xyz.s4i5.userservice.user.dto.UserDTOMapper;
 import xyz.s4i5.userservice.user.exceptions.CannotCreateUserException;
+import xyz.s4i5.userservice.user.exceptions.CannotUpdateUserException;
 import xyz.s4i5.userservice.user.exceptions.UserNotFoundException;
 
 import java.util.HashSet;
@@ -98,12 +101,16 @@ public class UserService {
             throw new UserNotFoundException();
         }
 
-        Optional.ofNullable(userDTO.getEmail()).ifPresent(user.get()::setEmail);
-        Optional.ofNullable(userDTO.getLogin()).ifPresent(user.get()::setLogin);
-        Optional.ofNullable(userDTO.getFullName()).ifPresent(user.get()::setFullName);
-        Optional.ofNullable(userDTO.getRoles()).ifPresent(user.get()::setRoles);
+        try {
+            Optional.ofNullable(userDTO.getEmail()).ifPresent(user.get()::setEmail);
+            Optional.ofNullable(userDTO.getLogin()).ifPresent(user.get()::setLogin);
+            Optional.ofNullable(userDTO.getFullName()).ifPresent(user.get()::setFullName);
+            Optional.ofNullable(userDTO.getRoles()).ifPresent(user.get()::setRoles);
 
-        userRepository.save(user.get());
+            userRepository.save(user.get());
+        } catch (Exception e){
+            throw new CannotUpdateUserException();
+        }
 
         return Optional.of(userDTO);
     }
