@@ -9,7 +9,6 @@ COPY src ./src
 
 RUN gradle build --no-daemon -x test
 
-# Application Stage
 FROM openjdk:21-jdk-slim
 
 WORKDIR /app

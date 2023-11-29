@@ -29,7 +29,6 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public Optional<UserDTO> createUser(String email, String login, String password){
-
         try {
             return Optional.of(
                     userDTOMapper.apply(userRepository.save(
@@ -46,8 +45,6 @@ public class UserService {
 
     public List<UserDTO> getUsers(String id, String login, String email, String fullName, List<Role> roles,
                                   int offset, int limit){
-
-
         User ex = User.builder()
                 .id(id)
                 .email(email)
@@ -82,7 +79,6 @@ public class UserService {
 
     @SneakyThrows
     public boolean deleteUser(String id){
-
         if(userRepository.findById(id).isEmpty()){
             throw new UserNotFoundException();
         }
@@ -94,7 +90,6 @@ public class UserService {
 
     @SneakyThrows
     public Optional<UserDTO> updateUser(UserDTO userDTO, String id){
-
         Optional<User> user = userRepository.findById(id);
 
         if (user.isEmpty()) {
