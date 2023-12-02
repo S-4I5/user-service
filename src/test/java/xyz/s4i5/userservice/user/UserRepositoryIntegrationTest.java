@@ -27,7 +27,7 @@ public class UserRepositoryIntegrationTest {
     private UserRepository userRepository;
     @Container
     @ServiceConnection
-    private final static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo");
+    private final static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0");
 
     @BeforeEach
     public void setup(){

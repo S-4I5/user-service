@@ -41,7 +41,7 @@ public class UserControllerIntegrationTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
     @Container
     @ServiceConnection
-    private final static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo");
+    private final static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0");
 
     @BeforeEach
     public void setup() {

@@ -42,8 +42,6 @@ public class UserService {
     }
 
     public List<UserDto> getUsers(UserDto userForSearchWithoutRoles, List<Role> roles, int offset, int limit){
-        System.out.println(userMapper.toUser(userForSearchWithoutRoles) + "map");
-
         List<User> users = userRepository.findAll(
                 Example.of(userMapper.toUser(userForSearchWithoutRoles)), PageRequest.of(offset, limit)).getContent();
 

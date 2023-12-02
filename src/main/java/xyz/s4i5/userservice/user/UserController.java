@@ -49,7 +49,6 @@ public class UserController {
                     mediaType = "application/json"))
     @ApiResponse(responseCode = "404", description = "Users not found", content = @Content(schema = @Schema(hidden = true)))
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.ACCEPTED)
     public UserDto deleteUser(
             @Parameter(description = "User with this id should be deleted")
             @PathVariable String id
@@ -109,7 +108,6 @@ public class UserController {
     @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(hidden = true)))
     @ApiResponse(responseCode = "400", description = "Invalid username/login/request body supplied", content = @Content(schema = @Schema(hidden = true)))
     @PutMapping("/{id}")
-    @ResponseStatus(HttpStatus.ACCEPTED)
     public UserDto updateUser(
             @Parameter(description = "User with this id should be updated")
             @PathVariable String id,
