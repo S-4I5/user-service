@@ -65,7 +65,6 @@ public class UserService {
 
     @SneakyThrows
     public UserDto deleteUser(String id){
-
         UserDto userDto = userRepository.findById(id).map(userMapper::toUserDto).orElseThrow(UserNotFoundException::new);
 
         userRepository.deleteById(id);

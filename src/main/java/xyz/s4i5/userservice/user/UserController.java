@@ -44,7 +44,7 @@ public class UserController {
             summary = "Delete user",
             description = "Will delete user with given id"
     )
-    @ApiResponse(responseCode = "201", description = "Returned user deleted",
+    @ApiResponse(responseCode = "200", description = "Returned user deleted",
             content = @Content( schema = @Schema(implementation = UserDto.class),
                     mediaType = "application/json"))
     @ApiResponse(responseCode = "404", description = "Users not found", content = @Content(schema = @Schema(hidden = true)))
@@ -102,7 +102,7 @@ public class UserController {
             summary = "Update users",
             description = "Will update user with given info"
     )
-    @ApiResponse(responseCode = "201", description = "User updated",
+    @ApiResponse(responseCode = "200", description = "User updated",
             content = @Content( schema = @Schema(implementation = UserDto.class),
                     mediaType = "application/json"))
     @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(hidden = true)))
