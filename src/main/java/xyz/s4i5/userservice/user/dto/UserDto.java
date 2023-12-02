@@ -15,7 +15,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class UserDTO {
+public class UserDto {
     @Parameter(description = "User id")
     private String id;
     @Parameter(description = "User login")

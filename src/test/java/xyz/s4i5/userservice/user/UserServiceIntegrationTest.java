@@ -4,46 +4,58 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.Index;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import xyz.s4i5.userservice.user.dto.UserDTO;
+import xyz.s4i5.userservice.user.dto.UpdateUserDto;
 import xyz.s4i5.userservice.user.exceptions.CannotCreateUserException;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
 
-
 @Testcontainers
 @SpringBootTest
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UserServiceIntegrationTest {
-
-    @Container
-    @ServiceConnection
-    private static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo");
-
     private final String login = "tests_lover";
     private final String email = "example@gmail.com";
     private final String password = "password";
-
+    @Container
+    @ServiceConnection
+    private static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo");
     @Autowired
     private UserService userService;
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
-    @Test
-    @Order(1)
-    public void shouldSaveUser() {
-        Optional<UserDTO> user = userService.createUser(email, login, password);
+    @BeforeEach
+    public void setup(){
+        mongoTemplate.dropCollection(User.class);
 
-        assertThat(user.isPresent()).isTrue();
+        mongoTemplate.createCollection(User.class);
+        mongoTemplate.indexOps(User.class).ensureIndex(new Index().on("login", Sort.Direction.ASC).unique());
+        mongoTemplate.indexOps(User.class).ensureIndex(new Index().on("email", Sort.Direction.ASC).unique());
     }
 
     @Test
-    @Order(2)
+    @Rollback
+    public void shouldSaveUser() {
+        assertThat(userService.createUser(email, login, password)).isNotNull();
+    }
+
+    @Test
+    @Rollback
     public void shouldNotSaveUserWithSameLoginAndEmail() {
+        userService.createUser(email, login, password);
+
         assertThrows(CannotCreateUserException.class,
                 () -> userService.createUser(1 + email, login, password));
 
@@ -52,45 +64,43 @@ public class UserServiceIntegrationTest {
     }
 
     @Test
-    @Order(3)
+    @Rollback
     public void shouldDeleteUser() {
-        Optional<UserDTO> user = userService.createUser(1 + email, login + 1, password);
-        assertThat(user.isPresent()).isTrue();
+        var user = userService.createUser(email, login, password);
 
-        assertThat(userService.deleteUser(user.get().getId())).isTrue();
+        assertThat(userService.deleteUser(user.getId())).isNotNull();
     }
 
     @Test
-    @Order(4)
+    @Rollback
     public void shouldUpdateUser() {
-        Optional<UserDTO> user = userService.createUser(2 + email, login + 2, password);
-        assertThat(user.isPresent()).isTrue();
+        var user = userService.createUser(email, login, password);
 
-        List<Role> newRolesList = List.of(Role.APP1_USER, Role.APP2_USER);
-        UserDTO userDTO = UserDTO.builder()
+        var newRolesList = List.of(Role.APP1_USER, Role.APP2_USER);
+
+        var updateUserDto = UpdateUserDto.builder()
                 .roles(newRolesList)
                 .build();
 
-        assertThat(userService.updateUser(userDTO, user.get().getId())).isEqualTo(Optional.of(userDTO));
+        assertThat(userService.updateUser(updateUserDto, user.getId()).getRoles()).isEqualTo(newRolesList);
     }
 
     @Test
-    @Order(5)
+    @Rollback
     public void shouldFindUserById() {
-        Optional<UserDTO> user = userService.createUser(3 + email, login + 3, password);
-        assertThat(user.isPresent()).isTrue();
+        var user = userService.createUser(email, login, password);
 
-        assertThat(userService.getUser(user.get().getId())).isPresent();
+        assertThat(userService.getUser(user.getId())).isNotNull();
     }
 
     @Test
-    @Order(6)
+    @Rollback
     public void shouldReturnListOfUsers() {
-        Optional<UserDTO> user = userService.createUser(4 + email, login + 4, password);
-        assertThat(user.isPresent()).isTrue();
+        var user = userService.createUser(email, login, password);
+        System.out.println(user);
 
-        List<UserDTO> userDTOList = userService.getUsers("", "", "", "", List.of(), 0, 10);
+        var userDtoList = userService.getUsers(user, List.of(), 0, 10);
 
-        assertThat(userDTOList.isEmpty()).isFalse();
+        assertThat(userDtoList.isEmpty()).isFalse();
     }
 }

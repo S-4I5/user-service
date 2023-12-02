@@ -2,21 +2,17 @@ package xyz.s4i5.userservice.user;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import xyz.s4i5.userservice.user.dto.UserDTO;
-import xyz.s4i5.userservice.user.exceptions.CannotCreateUserException;
-import xyz.s4i5.userservice.user.exceptions.UserNotFoundException;
-import xyz.s4i5.userservice.user.requests.CreateUserRequest;
-import xyz.s4i5.userservice.user.responses.ChangedFieldResponse;
-import xyz.s4i5.userservice.user.responses.UserDTOListResponse;
-import xyz.s4i5.userservice.user.responses.UserDTOResponse;
+import xyz.s4i5.userservice.user.dto.CreateUserDto;
+import xyz.s4i5.userservice.user.dto.UpdateUserDto;
+import xyz.s4i5.userservice.user.dto.UserDto;
 
 import java.util.List;
 
@@ -32,37 +28,33 @@ public class UserController {
             description = "Create user with email, login and password"
     )
     @ApiResponse(responseCode = "201", description = "User created",
-            content = @Content( schema = @Schema(implementation = UserDTOResponse.class),
+            content = @Content( schema = @Schema(implementation = UserDto.class),
                     mediaType = "application/json"))
     @ApiResponse(responseCode = "400", description = "Invalid username/login/request body supplied", content = @Content(schema = @Schema(hidden = true)))
-    @PostMapping()
-    public ResponseEntity<UserDTOResponse> createUser(
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserDto createUser(
             @Parameter(description = "User with this cred. should be created", required = true)
-            @Valid @RequestBody CreateUserRequest request
+            @Valid @RequestBody CreateUserDto request
     ) {
-        var result = userService.createUser(request.email(), request.login(), request.password());
-
-        return (result.map(
-                dto -> ResponseEntity.status(201).body(new UserDTOResponse(dto))).orElseGet(
-                        () -> ResponseEntity.badRequest().build())
-        );
+        return userService.createUser(request.getEmail(), request.getLogin(), request.getPassword());
     }
 
     @Operation(
             summary = "Delete user",
             description = "Will delete user with given id"
     )
-    @ApiResponse(responseCode = "204", description = "User deleted", content = @Content(schema = @Schema(hidden = true)))
+    @ApiResponse(responseCode = "201", description = "Returned user deleted",
+            content = @Content( schema = @Schema(implementation = UserDto.class),
+                    mediaType = "application/json"))
     @ApiResponse(responseCode = "404", description = "Users not found", content = @Content(schema = @Schema(hidden = true)))
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(
-            @Parameter(description = "User with this id should be deleted", required = true)
-            @NotNull @PathVariable String id
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public UserDto deleteUser(
+            @Parameter(description = "User with this id should be deleted")
+            @PathVariable String id
     ) {
-        boolean result = userService.deleteUser(id);
-
-        return (result ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build());
+        return userService.deleteUser(id);
     }
 
     @Operation(
@@ -70,20 +62,15 @@ public class UserController {
             description = "Will return user with given id"
     )
     @ApiResponse(responseCode = "200", description = "User returned",
-            content = @Content( schema = @Schema(implementation = UserDTOResponse.class),
+            content = @Content( schema = @Schema(implementation = UserDto.class),
                     mediaType = "application/json"))
     @ApiResponse(responseCode = "404", description = "Users not found", content = @Content(schema = @Schema(hidden = true)))
     @GetMapping("/{id}")
-    public ResponseEntity<UserDTOResponse> getUser(
+    public UserDto getUser(
             @Parameter(description = "User with this id should be returned", required = true)
-            @NotNull @PathVariable String id
+            @PathVariable String id
     ) {
-        var result = userService.getUser(id);
-
-        return (result.map(
-                dto -> ResponseEntity.ok(new UserDTOResponse(dto))).orElseGet(
-                () -> ResponseEntity.notFound().build())
-        );
+        return userService.getUser(id);
     }
 
     @Operation(
@@ -91,29 +78,25 @@ public class UserController {
             description = "Will return list of users filtered by given parameters"
     )
     @ApiResponse(responseCode = "200", description = "Users returned",
-            content = @Content( schema = @Schema(implementation = UserDTOListResponse.class),
+            content = @Content( array = @ArraySchema(schema = @Schema(implementation = UserDto.class)),
                     mediaType = "application/json"))
     @ApiResponse(responseCode = "404", description = "Users not found", content = @Content(schema = @Schema(hidden = true)))
-    @GetMapping("")
-    public ResponseEntity<UserDTOListResponse> getUsersWithParams(
+    @GetMapping
+    public List<UserDto> getUsersWithParams(
             @RequestParam(name = "id", required = false) String id,
             @RequestParam(name = "login", required = false) String login,
             @RequestParam(name = "email", required = false) String email,
             @RequestParam(name = "fullName", required = false) String fullName,
-            @RequestParam(name = "roles", required = false) List<Role> roles,
+            @RequestParam(name = "roles", required = false, defaultValue = "") List<Role> roles,
             @RequestParam(name = "limit", required = false, defaultValue = "10") int limit,
             @RequestParam(name = "offset", required = false, defaultValue = "0") int offset
     ) {
-        if(roles == null){
-            roles = List.of();
-        }
-
-        var result = userService.getUsers(id, login, email, fullName, roles, offset, limit);
-
-        return (result.isEmpty() ?
-                ResponseEntity.notFound().build() :
-                ResponseEntity.ok(new UserDTOListResponse(result.stream().map(UserDTOResponse::new).toList()))
-        );
+        return userService.getUsers(UserDto.builder()
+                .id(id)
+                .login(login)
+                .email(email)
+                .fullName(fullName)
+                .build(), roles, offset, limit);
     }
 
     @Operation(
@@ -121,22 +104,18 @@ public class UserController {
             description = "Will update user with given info"
     )
     @ApiResponse(responseCode = "201", description = "User updated",
-            content = @Content( schema = @Schema(implementation = ChangedFieldResponse.class),
+            content = @Content( schema = @Schema(implementation = UserDto.class),
                     mediaType = "application/json"))
     @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(hidden = true)))
     @ApiResponse(responseCode = "400", description = "Invalid username/login/request body supplied", content = @Content(schema = @Schema(hidden = true)))
-    @PatchMapping("/{id}")
-    public ResponseEntity<ChangedFieldResponse> updateUser(
-            @Parameter(description = "User with this id should be updated", required = true)
-            @NotNull @PathVariable String id,
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public UserDto updateUser(
+            @Parameter(description = "User with this id should be updated")
+            @PathVariable String id,
             @Parameter(description = "List of fields for update", required = true)
-            @RequestBody UserDTO userDTO
+            @RequestBody UpdateUserDto updateUserDto
     ) {
-        var result = userService.updateUser(userDTO, id);
-
-        return (result.map(
-                dto -> ResponseEntity.accepted().body(new ChangedFieldResponse(dto))).orElseGet(
-                () -> ResponseEntity.badRequest().build())
-        );
+        return userService.updateUser(updateUserDto, id);
     }
 }

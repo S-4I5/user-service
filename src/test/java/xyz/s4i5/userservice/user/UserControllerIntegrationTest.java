@@ -1,23 +1,24 @@
 package xyz.s4i5.userservice.user;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import net.minidev.json.JSONArray;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import xyz.s4i5.userservice.user.dto.UserDTO;
-import xyz.s4i5.userservice.user.requests.CreateUserRequest;
+import xyz.s4i5.userservice.user.dto.CreateUserDto;
+import xyz.s4i5.userservice.user.dto.UserDto;
 
 import java.util.List;
 
@@ -28,28 +29,47 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UserControllerIntegrationTest {
-
-    @Container
-    @ServiceConnection
-    private static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo");
-
     private final String login = "tests_lover";
     private final String email = "example@gmail.com";
     private final String password = "password";
     private final String httpPath = "http://localhost:8080/api/v1";
-
     @Autowired
     private MockMvc mockMvc;
-
+    @Autowired
+    private MongoTemplate mongoTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    @Container
+    @ServiceConnection
+    private final static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo");
+
+    @BeforeEach
+    public void setup() {
+        mongoTemplate.dropCollection(User.class);
+
+        mongoTemplate.createCollection(User.class);
+        mongoTemplate.indexOps(User.class).ensureIndex(new Index().on("login", Sort.Direction.ASC).unique());
+        mongoTemplate.indexOps(User.class).ensureIndex(new Index().on("email", Sort.Direction.ASC).unique());
+    }
+
+    private String createUserWithDefaultRecords() throws Exception {
+        var request = new CreateUserDto(email, login, password);
+        var requestJson = objectMapper.writeValueAsString(request);
+
+        var response = mockMvc.perform(post(httpPath + "/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson)
+        ).andReturn();
+
+        System.out.println(JsonPath.read(response.getResponse().getContentAsString(), "$.id").toString());
+
+        return JsonPath.read(response.getResponse().getContentAsString(), "$.id");
+    }
 
     @Test
-    @Order(1)
     public void shouldCreateUser() throws Exception {
-        CreateUserRequest request = new CreateUserRequest(email, login, password);
-        String requestJson = objectMapper.writeValueAsString(request);
+        var request = new CreateUserDto(email, login, password);
+        var requestJson = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post(httpPath + "/users")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -58,51 +78,34 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    @Order(2)
     public void shouldFindNewUserByID() throws Exception {
-        CreateUserRequest request = new CreateUserRequest(1 + email, login + 1, password);
-        String requestJson = objectMapper.writeValueAsString(request);
-
-        var response = mockMvc.perform(post(httpPath + "/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson)
-        ).andExpect(status().isCreated()).andReturn();
-
-        String userId = JsonPath.read(response.getResponse().getContentAsString(), "$.user.id");
+        var userId = createUserWithDefaultRecords();
 
         mockMvc.perform(get(httpPath + "/users/" + userId)
         ).andExpect(status().isOk());
     }
 
     @Test
-    @Order(3)
     public void shouldDeleteUserById() throws Exception {
-        CreateUserRequest request = new CreateUserRequest(2 + email, login + 2, password);
-        String requestJson = objectMapper.writeValueAsString(request);
-
-        var response = mockMvc.perform(post(httpPath + "/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson)
-        ).andExpect(status().isCreated()).andReturn();
-
-        String userId = JsonPath.read(response.getResponse().getContentAsString(), "$.user.id");
+        var userId = createUserWithDefaultRecords();
 
         mockMvc.perform(delete(httpPath + "/users/" + userId)
-        ).andExpect(status().isNoContent());
+        ).andExpect(status().isAccepted());
     }
 
     @Test
-    @Order(4)
     public void shouldNotCreateUserWithExistingEmailOrLogin() throws Exception {
-        CreateUserRequest request = new CreateUserRequest(3 + email, login, password);
-        String requestJson = objectMapper.writeValueAsString(request);
+        createUserWithDefaultRecords();
+
+        var request = new CreateUserDto("other_email@gmail.com", login, password);
+        var requestJson = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post(httpPath + "/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
         ).andExpect(status().isBadRequest()).andReturn();
 
-        request = new CreateUserRequest(email, login + 3, password);
+        request = new CreateUserDto(email, "other_login", password);
         requestJson = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post(httpPath + "/users")
@@ -112,47 +115,58 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    @Order(5)
     public void shouldUpdateUser() throws Exception {
-        CreateUserRequest request = new CreateUserRequest(4 + email, login + 4, password);
-        String requestJson = objectMapper.writeValueAsString(request);
+        var userId = createUserWithDefaultRecords();
 
-        var response = mockMvc.perform(post(httpPath + "/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson)
-        ).andExpect(status().isCreated()).andReturn();
+        var newRolesList = List.of(Role.APP1_USER, Role.APP2_USER);
 
-        String userId = JsonPath.read(response.getResponse().getContentAsString(), "$.user.id");
-
-        List<Role> newRolesList = List.of(Role.APP1_USER, Role.APP2_USER);
-
-        UserDTO userDTO = UserDTO.builder()
+        var userDto = UserDto.builder()
                 .roles(newRolesList)
                 .build();
-        requestJson = objectMapper.writeValueAsString(userDTO);
+        var requestJson = objectMapper.writeValueAsString(userDto);
 
         JSONArray expectedRoles = new JSONArray();
         expectedRoles.appendElement("APP1_USER");
         expectedRoles.appendElement("APP2_USER");
 
-        mockMvc.perform(patch(httpPath + "/users/" + userId)
+        mockMvc.perform(put(httpPath + "/users/" + userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
         ).andExpect(status().isAccepted()).andExpect(
-                (jsonPath("$.changed_fields.roles").value(expectedRoles)
+                (jsonPath("$.roles").value(expectedRoles)
                 )).andReturn();
     }
 
     @Test
-    @Order(6)
     public void shouldReturnListOfUsers() throws Exception {
+        createUserWithDefaultRecords();
+
         mockMvc.perform(get(httpPath + "/users")
         ).andExpect(status().isOk());
     }
 
     @Test
-    @Order(7)
     public void shouldReturnUsersWithRole() throws Exception {
+        var userId = createUserWithDefaultRecords();
+
+        var newRolesList = List.of(Role.APP1_USER, Role.APP2_USER);
+
+        var userToFindDto = UserDto.builder()
+                .roles(newRolesList)
+                .build();
+        var requestJson = objectMapper.writeValueAsString(userToFindDto);
+
+        JSONArray expectedRoles = new JSONArray();
+        expectedRoles.appendElement("APP1_USER");
+        expectedRoles.appendElement("APP2_USER");
+
+        mockMvc.perform(put(httpPath + "/users/" + userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson)
+        ).andExpect(status().isAccepted()).andExpect(
+                (jsonPath("$.roles").value(expectedRoles)
+                )).andReturn();
+
         mockMvc.perform(get(httpPath + "/users")
                 .requestAttr("roles", String.valueOf(List.of(Role.APP1_USER)))
         ).andExpect(status().isOk());

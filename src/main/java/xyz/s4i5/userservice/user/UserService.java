@@ -1,16 +1,16 @@
 package xyz.s4i5.userservice.user;
 
-import com.mongodb.MongoWriteException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import xyz.s4i5.userservice.encoder.PasswordEncoder;
-import xyz.s4i5.userservice.user.dto.UserDTO;
-import xyz.s4i5.userservice.user.dto.UserDTOMapper;
+import xyz.s4i5.userservice.user.dto.UpdateUserDto;
+import xyz.s4i5.userservice.user.dto.UserDto;
+import xyz.s4i5.userservice.user.dto.UserListMapper;
+import xyz.s4i5.userservice.user.dto.UserMapper;
 import xyz.s4i5.userservice.user.exceptions.CannotCreateUserException;
 import xyz.s4i5.userservice.user.exceptions.CannotUpdateUserException;
 import xyz.s4i5.userservice.user.exceptions.UserNotFoundException;
@@ -19,94 +19,79 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
-import static java.util.stream.Collectors.toList;
-
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-    private final UserDTOMapper userDTOMapper;
+    private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final UserListMapper userListMapper;
 
-    public Optional<UserDTO> createUser(String email, String login, String password){
+    public UserDto createUser(String email, String login, String password){
         try {
-            return Optional.of(
-                    userDTOMapper.apply(userRepository.save(
+            return userMapper.toUserDto(userRepository.save(
                         User.builder()
                                 .email(email)
                                 .login(login)
                                 .password(passwordEncoder.encode(password))
                                 .build()
-            )));
-        } catch (Exception e) {
+            ));
+        } catch (DuplicateKeyException e) {
             throw new CannotCreateUserException();
         }
     }
 
-    public List<UserDTO> getUsers(String id, String login, String email, String fullName, List<Role> roles,
-                                  int offset, int limit){
-        User ex = User.builder()
-                .id(id)
-                .email(email)
-                .login(login)
-                .fullName(fullName)
-                .build();
+    public List<UserDto> getUsers(UserDto userForSearchWithoutRoles, List<Role> roles, int offset, int limit){
+        System.out.println(userMapper.toUser(userForSearchWithoutRoles) + "map");
 
-        Example<User> example = Example.of(ex);
+        List<User> users = userRepository.findAll(
+                Example.of(userMapper.toUser(userForSearchWithoutRoles)), PageRequest.of(offset, limit)).getContent();
 
-        Page<User> userPage = userRepository.findAll(example, PageRequest.of(offset, limit));
+        if(!roles.isEmpty()){
+            users = users.stream().filter(x -> {
+                if(x.getRoles() == null){
+                    return false;
+                }
+                return new HashSet<>(x.getRoles()).containsAll(roles);
+            }).toList();
+        }
 
-        if(userPage.getContent().isEmpty()){
+        if(users.isEmpty()){
             throw new UserNotFoundException();
         }
 
-        return userPage.getContent().stream().map(userDTOMapper).filter(x -> {
-            if(x.getRoles() == null)
-                return false;
-            return new HashSet<>(x.getRoles()).containsAll(roles);
-        }).toList();
+        return userListMapper.toUserDtoList(users);
     }
 
-    public Optional<UserDTO> getUser(String id){
-        Optional<UserDTO> userDTO = userRepository.findById(id).map(userDTOMapper);
-
-        if(userDTO.isEmpty()){
-            throw new UserNotFoundException();
-        }
-
-        return userDTO;
+    public UserDto getUser(String id){
+        return userRepository.findById(id).map(userMapper::toUserDto).orElseThrow(UserNotFoundException::new);
     }
 
     @SneakyThrows
-    public boolean deleteUser(String id){
-        if(userRepository.findById(id).isEmpty()){
-            throw new UserNotFoundException();
-        }
+    public UserDto deleteUser(String id){
+
+        UserDto userDto = userRepository.findById(id).map(userMapper::toUserDto).orElseThrow(UserNotFoundException::new);
 
         userRepository.deleteById(id);
 
-        return true;
+        return userDto;
     }
 
     @SneakyThrows
-    public Optional<UserDTO> updateUser(UserDTO userDTO, String id){
-        Optional<User> user = userRepository.findById(id);
-
-        if (user.isEmpty()) {
-            throw new UserNotFoundException();
-        }
+    public UserDto updateUser(UpdateUserDto updateUserDto, String id){
+        User user = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
 
         try {
-            Optional.ofNullable(userDTO.getEmail()).ifPresent(user.get()::setEmail);
-            Optional.ofNullable(userDTO.getLogin()).ifPresent(user.get()::setLogin);
-            Optional.ofNullable(userDTO.getFullName()).ifPresent(user.get()::setFullName);
-            Optional.ofNullable(userDTO.getRoles()).ifPresent(user.get()::setRoles);
+            Optional.ofNullable(updateUserDto.getEmail()).ifPresent(user::setEmail);
+            Optional.ofNullable(updateUserDto.getLogin()).ifPresent(user::setLogin);
+            Optional.ofNullable(updateUserDto.getFullName()).ifPresent(user::setFullName);
+            Optional.ofNullable(updateUserDto.getRoles()).ifPresent(user::setRoles);
 
-            userRepository.save(user.get());
-        } catch (Exception e){
+            userRepository.save(user);
+        } catch (DuplicateKeyException e){
             throw new CannotUpdateUserException();
         }
 
-        return Optional.of(userDTO);
+        return userMapper.toUserDto(user);
     }
 }
