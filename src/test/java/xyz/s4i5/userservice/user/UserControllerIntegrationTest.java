@@ -90,7 +90,7 @@ public class UserControllerIntegrationTest {
         var userId = createUserWithDefaultRecords();
 
         mockMvc.perform(delete(httpPath + "/users/" + userId)
-        ).andExpect(status().isAccepted());
+        ).andExpect(status().isOk());
     }
 
     @Test
@@ -132,7 +132,7 @@ public class UserControllerIntegrationTest {
         mockMvc.perform(put(httpPath + "/users/" + userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
-        ).andExpect(status().isAccepted()).andExpect(
+        ).andExpect(status().isOk()).andExpect(
                 (jsonPath("$.roles").value(expectedRoles)
                 )).andReturn();
     }
@@ -163,7 +163,7 @@ public class UserControllerIntegrationTest {
         mockMvc.perform(put(httpPath + "/users/" + userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
-        ).andExpect(status().isAccepted()).andExpect(
+        ).andExpect(status().isOk()).andExpect(
                 (jsonPath("$.roles").value(expectedRoles)
                 )).andReturn();
 

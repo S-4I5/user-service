@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import xyz.s4i5.userservice.encoder.PasswordEncoder;
 import xyz.s4i5.userservice.user.dto.UpdateUserDto;
 import xyz.s4i5.userservice.user.dto.UserDto;
-import xyz.s4i5.userservice.user.dto.UserListMapper;
 import xyz.s4i5.userservice.user.dto.UserMapper;
 import xyz.s4i5.userservice.user.exceptions.CannotCreateUserException;
 import xyz.s4i5.userservice.user.exceptions.CannotUpdateUserException;
@@ -25,7 +24,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    private final UserListMapper userListMapper;
 
     public UserDto createUser(String email, String login, String password){
         try {
@@ -58,7 +56,7 @@ public class UserService {
             throw new UserNotFoundException();
         }
 
-        return userListMapper.toUserDtoList(users);
+        return userMapper.toUserDtoList(users);
     }
 
     public UserDto getUser(String id){

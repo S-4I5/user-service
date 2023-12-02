@@ -30,7 +30,7 @@ public class UserServiceIntegrationTest {
     private final String password = "password";
     @Container
     @ServiceConnection
-    private static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0");
+    private final static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0");
     @Autowired
     private UserService userService;
     @Autowired
