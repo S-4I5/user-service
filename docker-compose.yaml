@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+
+  user_service_app:
+    build:
+      context: .
+      dockerfile: user-service.dockerfile
+    container_name: user-user_service_app_container
+    environment:
+      - SPRING_DATA_MONGODB_HOST=user_service_mongodb
+      - SPRING_DATA_MONGODB_DATABASE=users
+      - SPRING_DATA_MONGODB_PORT=27017
+      - SPRING_DATA_MONGODB_USERNAME=admin
+      - SPRING_DATA_MONGODB_PASSWORD=admin
+      - SPRING_DATA_MONGODB_AUTHENTICATION-DATABASE=admin
+      - SPRING_DATA_MONGODB_AUTO-INDEX-CREATION=true
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user_service_mongodb
+    networks:
+      - user_service_network
+
+  user_service_mongodb:
+    image: mongo:7.0
+    container_name: user_service_mongodb_container
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo:/data
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_DATABASE=users
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+    networks:
+      - user_service_network
+
+volumes:
+  mongo: {}
+
+networks:
+  user_service_network:
