@@ -18,6 +18,8 @@ import xyz.s4i5.userservice.model.dto.user.UpdateUserDto;
 import xyz.s4i5.userservice.model.dto.user.UserDto;
 import xyz.s4i5.userservice.service.UserService;
 
+import java.util.UUID;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(UserController.ROOT_URI)
@@ -57,7 +59,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(
             @Parameter(description = "User with this id should be deleted")
-            @PathVariable String id
+            @PathVariable UUID id
     ) {
         userService.deleteUser(id);
     }
@@ -73,7 +75,7 @@ public class UserController {
     @GetMapping(GET_URI)
     public UserDto getUser(
             @Parameter(description = "User with this id should be returned", required = true)
-            @PathVariable String id
+            @PathVariable UUID id
     ) {
         return userService.getUser(id);
     }
@@ -104,7 +106,7 @@ public class UserController {
     @PatchMapping(UPDATE_URI)
     public UserDto updateUser(
             @Parameter(description = "User with this id should be updated")
-            @PathVariable String id,
+            @PathVariable UUID id,
             @Parameter(description = "List of fields for update", required = true)
             @RequestBody UpdateUserDto updateUserDto
     ) {

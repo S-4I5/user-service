@@ -5,7 +5,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Builder;
 import lombok.Data;
-import xyz.s4i5.userservice.model.entity.user.Role;
+import xyz.s4i5.userservice.model.entity.role.Role;
+import xyz.s4i5.userservice.model.entity.role.RoleName;
 
 import java.util.List;
 
@@ -25,5 +26,5 @@ public class UpdateUserDto {
     private String fullName;
 
     @Parameter(description = "User roles")
-    private List<Role> roles;
+    private List<RoleName> roles;
 }

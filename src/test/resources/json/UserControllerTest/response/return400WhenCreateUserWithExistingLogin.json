@@ -1,5 +1,5 @@
 {
   "status": 400,
-  "message": "User with given login or email already exists 'Optional[ \"same_login\" }', details={}}.]'",
+  "message": "User with given login or email already exists:  Key (login)=(same_login) already exists.",
   "messageCode": "api.user.create.uniqueFieldDuplicate"
 }

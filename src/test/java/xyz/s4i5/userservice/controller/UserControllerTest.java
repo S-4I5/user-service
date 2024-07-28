@@ -2,6 +2,7 @@ package xyz.s4i5.userservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -12,13 +13,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import xyz.s4i5.userservice.model.dto.user.CreateUserDto;
 import xyz.s4i5.userservice.model.dto.user.UpdateUserDto;
-import xyz.s4i5.userservice.model.entity.user.Role;
+import xyz.s4i5.userservice.model.entity.role.Role;
+import xyz.s4i5.userservice.model.entity.role.RoleName;
 import xyz.s4i5.userservice.model.entity.user.User;
+import xyz.s4i5.userservice.repository.RoleRepository;
 import xyz.s4i5.userservice.repository.UserRepository;
 
 import java.util.List;
@@ -37,7 +41,11 @@ class UserControllerTest {
 
     @Container
     @ServiceConnection
-    private final static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0");
+    private final static GenericContainer<?> postgreSQLContainer = new PostgreSQLContainer("postgres:16")
+            .withExposedPorts(5432)
+            .withEnv("POSTGRES_DB", "user")
+            .withEnv("POSTGRES_USER", "postgres")
+            .withEnv("POSTGRES_PASSWORD", "password");
 
     @Autowired
     private MockMvc mockMvc;
@@ -45,10 +53,13 @@ class UserControllerTest {
     private ObjectMapper objectMapper;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private RoleRepository roleRepository;
 
     @BeforeEach
     public void setup() {
         userRepository.deleteAll();
+        roleRepository.deleteAll();
     }
 
     @Test
@@ -57,7 +68,9 @@ class UserControllerTest {
         var givenDto = CreateUserDto.builder()
                 .email("example@gmail.com")
                 .login("tests_lover")
+                .fullName("fullName")
                 .password("password")
+                .roles(List.of(RoleName.APP1_USER))
                 .build();
         var given = objectMapper.writeValueAsString(givenDto);
 
@@ -72,6 +85,13 @@ class UserControllerTest {
         actual
                 .andExpect(status().isCreated())
                 .andExpect(content().json(expected));
+        Assertions.assertThat(userRepository.findAll().get(0))
+                .hasFieldOrPropertyWithValue("email","example@gmail.com")
+                .hasFieldOrPropertyWithValue("login", "tests_lover")
+                .hasFieldOrPropertyWithValue("fullName", "fullName")
+                .hasNoNullFieldsOrProperties();
+        Assertions.assertThat(roleRepository.findAll().get(0))
+                .hasFieldOrPropertyWithValue("roleName", RoleName.APP1_USER);
     }
 
     @Test
@@ -174,24 +194,33 @@ class UserControllerTest {
     @Test
     @SneakyThrows
     void deleteUser() {
-        var givenId = userRepository.save(User.builder()
+        var givenUser = userRepository.save(User.builder()
                 .login("login")
                 .email("example@gmail.com")
                 .password("XD")
                 .build()
-        ).getId();
+        );
+        roleRepository.save(Role.builder()
+                .roleName(RoleName.APP1_ADMIN)
+                .user(givenUser)
+                .build()
+        );
 
 
         var actual = mockMvc.perform(
                 delete(
                         UserController.ROOT_URI + UserController.DELETE_URI,
-                        givenId
+                        givenUser.getId()
                 )
         );
 
 
         actual
                 .andExpect(status().isNoContent());
+        Assertions.assertThat(userRepository.findAll())
+                .isEmpty();
+        Assertions.assertThat(roleRepository.findAll())
+                .isEmpty();
     }
 
     @Test
@@ -214,18 +243,22 @@ class UserControllerTest {
     @Test
     @SneakyThrows
     void updateUser() {
-        var givenId = userRepository.save(User.builder()
+        var givenUser = userRepository.save(User.builder()
                 .login("oldLogin")
                 .fullName("oldFullName")
-                .roles(List.of(Role.APP1_USER))
                 .email("oldemail@gmail.com")
                 .build()
-        ).getId();
+        );
+        roleRepository.save(Role.builder()
+                .roleName(RoleName.APP1_ADMIN)
+                .user(givenUser)
+                .build()
+        );
 
         var givenDto = UpdateUserDto.builder()
                 .login("newLogin")
                 .fullName("newFullName")
-                .roles(List.of(Role.APP2_USER))
+                .roles(List.of(RoleName.APP2_USER))
                 .email("newemail@gmail.com")
                 .build();
         var given = objectMapper.writeValueAsString(givenDto);
@@ -234,7 +267,7 @@ class UserControllerTest {
         var actual = mockMvc.perform(
                 patch(
                         UserController.ROOT_URI + UserController.UPDATE_URI,
-                        givenId
+                        givenUser.getId()
                 )
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(given)
@@ -245,6 +278,12 @@ class UserControllerTest {
         actual
                 .andExpect(status().isOk())
                 .andExpect(content().json(expected));
+        Assertions.assertThat(userRepository.findAll().get(0))
+                .hasFieldOrPropertyWithValue("email","newemail@gmail.com")
+                .hasFieldOrPropertyWithValue("login", "newLogin")
+                .hasFieldOrPropertyWithValue("fullName", "newFullName");
+        Assertions.assertThat(roleRepository.findAll().get(0))
+                .hasFieldOrPropertyWithValue("roleName", RoleName.APP2_USER);
     }
 
     @ParameterizedTest
@@ -262,7 +301,6 @@ class UserControllerTest {
         var givenId = userRepository.save(User.builder()
                 .login("oldLogin")
                 .fullName("oldFullName")
-                .roles(List.of(Role.APP1_USER))
                 .email("oldemail@gmail.com")
                 .build()
         ).getId();
@@ -297,24 +335,91 @@ class UserControllerTest {
         );
     }
 
+    @Test
+    @SneakyThrows
+    void searchWithMultipleRoles() {
+        var givenUser1 = userRepository.save(User.builder()
+                .login("shouldFind")
+                .fullName("shouldFind")
+                .email("shouldFind@gmail.com")
+                .build()
+        );
+        roleRepository.save(Role.builder()
+                .roleName(RoleName.APP1_USER)
+                .user(givenUser1)
+                .build()
+        );
+        roleRepository.save(Role.builder()
+                .roleName(RoleName.APP2_USER)
+                .user(givenUser1)
+                .build()
+        );
+
+        var givenUser2 = userRepository.save(User.builder()
+                .login("no")
+                .fullName("no")
+                .email("no@gmail.com")
+                .build()
+        );
+        roleRepository.save(Role.builder()
+                .roleName(RoleName.APP1_USER)
+                .user(givenUser2)
+                .build()
+        );
+        var given = readJson("/request/search/searchWithMultipleRoles");
+
+
+        var actual = mockMvc.perform(
+                post(UserController.ROOT_URI + UserController.SEARCH_URI)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(given)
+        );
+
+
+        var expected = readJson("/response/search/searchWithMultipleRoles");
+        actual
+                .andExpect(status().isOk())
+                .andExpect(content().json(expected));
+    }
+
     @ParameterizedTest
     @MethodSource("provideArgsForSearch")
     @SneakyThrows
     void search(String fileName) {
-        userRepository.save(User.builder()
+        var givenUser1 = userRepository.save(User.builder()
                 .login("shouldFind")
                 .fullName("shouldFind")
                 .email("shouldFind@gmail.com")
-                .roles(List.of(Role.APP1_USER, Role.APP2_USER))
                 .build()
         );
-        userRepository.save(User.builder()
+        roleRepository.save(Role.builder()
+                .roleName(RoleName.APP1_USER)
+                .user(givenUser1)
+                .build()
+        );
+        roleRepository.save(Role.builder()
+                .roleName(RoleName.APP2_USER)
+                .user(givenUser1)
+                .build()
+        );
+
+        var givenUser2 = userRepository.save(User.builder()
                 .login("no")
                 .fullName("no")
                 .email("no@gmail.com")
-                .roles(List.of(Role.APP1_ADMIN, Role.APP2_ADMIN))
                 .build()
         );
+        roleRepository.save(Role.builder()
+                .roleName(RoleName.APP1_ADMIN)
+                .user(givenUser2)
+                .build()
+        );
+        roleRepository.save(Role.builder()
+                .roleName(RoleName.APP2_ADMIN)
+                .user(givenUser2)
+                .build()
+        );
+
         var given = readJson("/request/search/" + fileName);
 
 

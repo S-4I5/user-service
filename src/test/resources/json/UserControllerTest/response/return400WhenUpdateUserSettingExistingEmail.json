@@ -1,5 +1,5 @@
 {
   "status": 400,
-  "message": "User with given login or email already exists 'Optional[ \"already.exists@gmail.com\" }', details={}}.]'",
+  "message": "User with given login or email already exists:  Key (email)=(already.exists@gmail.com) already exists.",
   "messageCode": "api.user.create.uniqueFieldDuplicate"
 }

@@ -1,15 +1,29 @@
 spring:
-  data:
-    mongodb:
-      auto-index-creation: true
-      username: admin
-      password: admin
-      host: localhost
-      port: 27017
-      database: users
-      authentication-database: admin
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/user}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:password}
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        globally_quoted_identifiers: true
+    hibernate:
+      ddl-auto: none
 
 secret: "sagwg][alwglwa]g2224"
+
+logging:
+  level:
+    root:
+      ${LOGGING_LEVEL_ROOT:INFO}
+    org:
+      hibernate:
+        SQL: ${LOGGING_LEVEL_HIBERNATE:DEBUG}
 
 server:
   servlet:

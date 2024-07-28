@@ -5,15 +5,17 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Builder;
 import lombok.Data;
-import xyz.s4i5.userservice.model.entity.user.Role;
+import xyz.s4i5.userservice.model.entity.role.Role;
+import xyz.s4i5.userservice.model.entity.role.RoleName;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
 public class UserDto {
     @Parameter(description = "User id")
-    private String id;
+    private UUID id;
 
     @Parameter(description = "User login")
     private String login;
@@ -27,5 +29,5 @@ public class UserDto {
     private String fullName;
 
     @Parameter(description = "User roles")
-    private List<Role> roles;
+    private List<RoleName> roles;
 }

@@ -2,6 +2,7 @@ package xyz.s4i5.userservice.exceptions;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,6 +19,14 @@ public class ApiExceptionHandler {
     private final int MAX_TRACE_LENGTH = 20;
 
     private final MessageSource messageSource;
+
+    @ResponseBody
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ErrorDto handleException(DataIntegrityViolationException exception, Locale locale) {
+        return createErrorDto(exception, locale, HttpStatus.BAD_REQUEST, "api.user.create.uniqueFieldDuplicate",
+                List.of(exception.getRootCause().getMessage().split("Подробности:")[1]).toArray());
+    }
 
     @ResponseBody
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

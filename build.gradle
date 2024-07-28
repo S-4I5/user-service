@@ -31,14 +31,18 @@ repositories {
 }
 
 dependencies {
-	testImplementation group: 'org.testcontainers', name: 'mongodb', version: '1.19.3'
+	implementation group: 'org.flywaydb', name: 'flyway-core', version: '10.16.0'
+	runtimeOnly group: 'org.flywaydb', name: 'flyway-database-postgresql', version: '10.16.0'
+
+	testImplementation group: 'org.testcontainers', name: 'postgresql', version: '1.20.0'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 	testImplementation 'org.testcontainers:junit-jupiter'
+	runtimeOnly 'org.postgresql:postgresql'
 
 	implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.0.2'
 	implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: '3.2.0'
 
