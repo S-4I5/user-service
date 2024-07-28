@@ -32,14 +32,11 @@ public class UserService {
     private final MongoTemplate mongoTemplate;
 
     public UserDto createUser(CreateUserDto createUserDto) {
-        return userMapper.toUserDto(saveUser(
-                        User.builder()
-                                .email(createUserDto.getEmail())
-                                .login(createUserDto.getLogin())
-                                .password(passwordEncoder.encode(createUserDto.getPassword()))
-                                .build()
-                )
-        );
+        var user = userMapper.toUser(createUserDto);
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        return userMapper.toUserDto(userRepository.save(user));
     }
 
     public Page<UserDto> searchUsers(UserSearchDto searchDto, Pageable pageable) {
@@ -86,15 +83,6 @@ public class UserService {
 
         userMapper.update(user, updateUserDto);
 
-        return userMapper.toUserDto(saveUser(user));
-    }
-
-    private User saveUser(User user) {
-        try {
-            return userRepository.save(user);
-        } catch (DuplicateKeyException e) {
-            throw new UserApiException("api.user.create.uniqueFieldDuplicate",
-                    List.of(String.valueOf(Arrays.stream(e.getCause().getMessage().split(":")).reduce((x, y) -> y))));
-        }
+        return userMapper.toUserDto(userRepository.save(user));
     }
 }

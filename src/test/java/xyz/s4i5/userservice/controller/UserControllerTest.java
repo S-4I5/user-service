@@ -2,6 +2,7 @@ package xyz.s4i5.userservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -58,6 +59,8 @@ class UserControllerTest {
                 .email("example@gmail.com")
                 .login("tests_lover")
                 .password("password")
+                .fullName("fullName")
+                .roles(List.of(Role.APP1_USER))
                 .build();
         var given = objectMapper.writeValueAsString(givenDto);
 
@@ -72,6 +75,12 @@ class UserControllerTest {
         actual
                 .andExpect(status().isCreated())
                 .andExpect(content().json(expected));
+        Assertions.assertThat(userRepository.findAll().get(0))
+                .hasFieldOrPropertyWithValue("login", "tests_lover")
+                .hasFieldOrPropertyWithValue("fullName", "fullName")
+                .hasFieldOrPropertyWithValue("roles", List.of(Role.APP1_USER))
+                .hasFieldOrPropertyWithValue("email", "example@gmail.com")
+                .hasNoNullFieldsOrProperties();
     }
 
     @Test
@@ -192,6 +201,8 @@ class UserControllerTest {
 
         actual
                 .andExpect(status().isNoContent());
+        Assertions.assertThat(userRepository.findAll())
+                .isEmpty();
     }
 
     @Test
@@ -245,6 +256,11 @@ class UserControllerTest {
         actual
                 .andExpect(status().isOk())
                 .andExpect(content().json(expected));
+        Assertions.assertThat(userRepository.findAll().get(0))
+                .hasFieldOrPropertyWithValue("login", "newLogin")
+                .hasFieldOrPropertyWithValue("fullName", "newFullName")
+                .hasFieldOrPropertyWithValue("roles", List.of(Role.APP2_USER))
+                .hasFieldOrPropertyWithValue("email", "newemail@gmail.com");
     }
 
     @ParameterizedTest

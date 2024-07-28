@@ -1,4 +1,8 @@
 {
   "login": "tests_lover",
-  "email": "example@gmail.com"
+  "email": "example@gmail.com",
+  "fullName": "fullName",
+  "roles": [
+    "APP1_USER"
+  ]
 }

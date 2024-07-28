@@ -2,6 +2,7 @@ package xyz.s4i5.userservice.exceptions;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -24,6 +25,14 @@ public class ApiExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ErrorDto handleException(Exception exception, Locale locale) {
         return createErrorDto(exception, locale, HttpStatus.INTERNAL_SERVER_ERROR, "exception.unexpected", null);
+    }
+
+    @ResponseBody
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(DuplicateKeyException.class)
+    public ErrorDto handleDuplicateKeyException(DuplicateKeyException exception, Locale locale) {
+        return createErrorDto(exception, locale, HttpStatus.BAD_REQUEST, "api.user.create.uniqueFieldDuplicate",
+                List.of(Arrays.stream(exception.getCause().getMessage().split(":")).reduce((x, y) -> y)).toArray());
     }
 
     @ResponseBody
