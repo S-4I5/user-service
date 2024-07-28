@@ -1,0 +1,8 @@
+{
+  "login": "newLogin",
+  "email": "newemail@gmail.com",
+  "fullName": "newFullName",
+  "roles": [
+    "APP2_USER"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "content": [
+    {
+      "login": "shouldFind",
+      "email": "shouldFind@gmail.com",
+      "fullName": "shouldFind",
+      "roles": [
+        "APP1_USER",
+        "APP2_USER"
+      ]
+    }
+  ],
+  "pageable": {
+    "pageNumber": 0,
+    "pageSize": 20,
+    "sort": {
+      "sorted": false,
+      "empty": true,
+      "unsorted": true
+    },
+    "offset": 0,
+    "unpaged": false,
+    "paged": true
+  },
+  "last": true,
+  "totalElements": 1,
+  "totalPages": 1,
+  "size": 20,
+  "number": 0,
+  "sort": {
+    "sorted": false,
+    "empty": true,
+    "unsorted": true
+  },
+  "numberOfElements": 1,
+  "first": true,
+  "empty": false
+}

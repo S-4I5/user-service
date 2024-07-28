@@ -5,7 +5,7 @@ services:
   user_service_app:
     build:
       context: .
-      dockerfile: user-service.dockerfile
+      dockerfile: deployment/user-service.dockerfile
     container_name: user-user_service_app_container
     environment:
       - SPRING_DATA_MONGODB_HOST=user_service_mongodb
@@ -15,6 +15,7 @@ services:
       - SPRING_DATA_MONGODB_PASSWORD=admin
       - SPRING_DATA_MONGODB_AUTHENTICATION-DATABASE=admin
       - SPRING_DATA_MONGODB_AUTO-INDEX-CREATION=true
+    restart: unless-stopped
     ports:
       - "8080:8080"
     depends_on:
@@ -25,6 +26,7 @@ services:
   user_service_mongodb:
     image: mongo:7.0
     container_name: user_service_mongodb_container
+    restart: unless-stopped
     ports:
       - "27017:27017"
     volumes:
