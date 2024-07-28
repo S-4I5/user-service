@@ -9,5 +9,9 @@ spring:
       database: users
       authentication-database: admin
 
+secret: "sagwg][alwglwa]g2224"
+
 server:
+  servlet:
+    context-path: /api/v1
   port: 8080

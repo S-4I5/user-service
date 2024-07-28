@@ -1,5 +1,8 @@
 # Spring boot CRUD user-service
-Тестовое задание для студентов, проект v2x-core
+
+CRUD сервис для хранения пользователей.
+Имеет две резацизации: c Mongodb и c PostgreSql (под каждую отдельная ветка), unit/integration тесты используя testcontainers
+
 # Deployment via docker-compose
 ```
 docker-compose up
