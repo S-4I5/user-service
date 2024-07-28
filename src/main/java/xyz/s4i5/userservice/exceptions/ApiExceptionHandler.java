@@ -23,7 +23,7 @@ public class ApiExceptionHandler {
     @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ErrorDto handleException(DataIntegrityViolationException exception, Locale locale) {
+    public ErrorDto handleDataIntegrityViolationException(DataIntegrityViolationException exception, Locale locale) {
         return createErrorDto(exception, locale, HttpStatus.BAD_REQUEST, "api.user.create.uniqueFieldDuplicate",
                 List.of(exception.getRootCause().getMessage().split("Подробности:")[1]).toArray());
     }
